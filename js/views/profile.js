@@ -9,7 +9,7 @@ import { columnChart, lineChart } from '../charts.js';
 import { statTiles } from './history.js';
 import { actionSheet, confirmDialog, promptText, toast, openSheet } from '../ui.js';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 let wkMetric = 'sets';
 let mWeek = weekStart(Date.now());
@@ -98,7 +98,7 @@ A.setStep = async () => {
 };
 
 A.backupExport = async () => {
-  const data = JSON.stringify(exportData());
+  const data = JSON.stringify(await exportData());
   const name = `gymlog-backup-${todayStr()}.json`;
   const mark = () => { S.settings.lastBackup = Date.now(); persist('settings'); render(); };
   let file = null;

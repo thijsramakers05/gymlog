@@ -36,22 +36,29 @@ export function sortSessions() {
   S.sessions.sort((a, b) => b.start - a.start);
 }
 
+// Sleutels van opgeslagen foto's ("oefening|gym"); de foto's zelf worden pas geladen als ze nodig zijn.
+export const photoKeys = new Set();
+
 export async function openStore() {
   db = await new Promise((res, rej) => {
-    const r = indexedDB.open('gymlog', 1);
+    const r = indexedDB.open('gymlog', 2);
     r.onupgradeneeded = () => {
       const d = r.result;
       if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
       if (!d.objectStoreNames.contains('sessions')) d.createObjectStore('sessions', { keyPath: 'id' });
+      if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos');
     };
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   });
-  const tx = db.transaction(['kv', 'sessions']);
+  const tx = db.transaction(['kv', 'sessions', 'photos']);
   const kv = tx.objectStore('kv');
   const reqs = KV.map((k) => kv.get(k));
   const sreq = tx.objectStore('sessions').getAll();
-  const [vals, sessions] = await Promise.all([Promise.all(reqs.map(wrap)), wrap(sreq)]);
+  const preq = tx.objectStore('photos').getAllKeys();
+  const [vals, sessions, pkeys] = await Promise.all([Promise.all(reqs.map(wrap)), wrap(sreq), wrap(preq)]);
+  photoKeys.clear();
+  (pkeys || []).forEach((k) => photoKeys.add(k));
   KV.forEach((k, i) => { if (vals[i] !== undefined && vals[i] !== null) S[k] = vals[i]; });
   S.settings = { ...DEFAULT_SETTINGS, ...(S.settings || {}) };
   S.sessions = sessions || [];
@@ -93,19 +100,56 @@ export function flushActive() {
   return persist('active');
 }
 
-export function exportData() {
-  const o = { app: 'gymlog', version: 1, exportedAt: Date.now() };
+// ---------- Foto's ----------
+export function getPhoto(key) {
+  return wrap(db.transaction('photos').objectStore('photos').get(key));
+}
+export function putPhoto(key, blob) {
+  photoKeys.add(key);
+  const tx = db.transaction('photos', 'readwrite');
+  tx.objectStore('photos').put(blob, key);
+  return txDone(tx);
+}
+export function deletePhoto(key) {
+  photoKeys.delete(key);
+  const tx = db.transaction('photos', 'readwrite');
+  tx.objectStore('photos').delete(key);
+  return txDone(tx);
+}
+const blobToDataUrl = (b) => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => res(r.result);
+  r.onerror = () => rej(r.error);
+  r.readAsDataURL(b);
+});
+
+export async function exportData() {
+  const o = { app: 'gymlog', version: 2, exportedAt: Date.now() };
   KV.forEach((k) => { o[k] = S[k]; });
   o.sessions = S.sessions;
+  o.photos = {};
+  for (const key of photoKeys) {
+    const b = await getPhoto(key);
+    if (b) o.photos[key] = await blobToDataUrl(b);
+  }
   return o;
 }
 
 export async function replaceAll(data) {
-  const tx = db.transaction(['kv', 'sessions'], 'readwrite');
+  // Foto's eerst omzetten: binnen een IndexedDB-transactie mag niet op andere dingen gewacht worden.
+  const photos = [];
+  for (const [key, url] of Object.entries(data.photos || {})) {
+    try { photos.push([key, await (await fetch(url)).blob()]); } catch (e) { /* kapotte foto overslaan */ }
+  }
+  const tx = db.transaction(['kv', 'sessions', 'photos'], 'readwrite');
   const kv = tx.objectStore('kv');
   const ss = tx.objectStore('sessions');
+  const ps = tx.objectStore('photos');
   kv.clear();
   ss.clear();
+  ps.clear();
+  photoKeys.clear();
+  photos.forEach(([key, blob]) => { ps.put(blob, key); photoKeys.add(key); });
   const empty = { meta: {}, settings: {}, active: null };
   for (const k of KV) {
     S[k] = data[k] !== undefined && data[k] !== null ? data[k] : (k in empty ? empty[k] : []);

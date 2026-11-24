@@ -160,6 +160,7 @@ const P = {
   share: '<path d="M12 3.5v11M8 7.5l4-4 4 4M6 11H5v9.5h14V11h-1"/>',
   timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4M9.5 2.5h5"/>',
   warn: '<path d="M12 4L2.8 19.5h18.4L12 4zM12 10v4.5M12 17v.5"/>',
+  camera: '<path d="M4 8.5A1.5 1.5 0 015.5 7h2.3l1.5-2.2h5.4L16.2 7h2.3A1.5 1.5 0 0120 8.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 17.5z"/><circle cx="12" cy="13" r="3.4"/>',
 };
 
 export function icon(name, cls = '') {

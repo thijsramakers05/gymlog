@@ -2,6 +2,7 @@ import { S, openStore, persist } from './store.js';
 import { A, IN, CH, initRouter } from './core.js';
 import { ensureLibrary } from './logic.js';
 import { uid } from './util.js';
+import { injectSprite } from './visual.js';
 import './views/home.js';
 import './views/template.js';
 import { tick } from './views/workout.js';
@@ -55,6 +56,7 @@ async function init() {
   if (!S.settings.gymId && S.gyms.length) S.settings.gymId = S.gyms[0].id;
   ensureLibrary();
   document.documentElement.lang = S.settings.lang;
+  injectSprite();
   bindEvents();
   initRouter();
   setInterval(tick, 1000);

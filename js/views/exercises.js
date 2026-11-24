@@ -11,6 +11,17 @@ import { MUSCLES } from '../library.js';
 import { navBar, notFound, muscleLabel, equipLabel, metaChips, openExerciseForm, openMetaEditor, pickRest } from './shared.js';
 import { lineChart } from '../charts.js';
 import { actionSheet, confirmDialog, toast } from '../ui.js';
+import { exThumb, muscleMapPair, photoImg, photoInput, hasPhoto } from '../visual.js';
+import { metaKey } from '../logic.js';
+
+function visualCard(ex) {
+  const tiles = S.gyms.map((g) => {
+    const name = `<span class="ptile-name">${esc(g.name)}</span>`;
+    if (hasPhoto(ex.id, g.id)) return `<button class="ptile" data-a="exVisual" data-id="${ex.id}" data-gym="${g.id}" data-details="0">${photoImg(metaKey(ex.id, g.id))}${name}</button>`;
+    return `<label class="ptile add">${icon('camera')}<span class="ptile-add">${t('addPhoto')}</span>${name}${photoInput(ex.id, g.id)}</label>`;
+  }).join('');
+  return `<div class="card ex-visual">${muscleMapPair(ex)}<div class="ptile-row">${tiles}</div></div>`;
+}
 
 // ---------- Lijst ----------
 let q = '';
@@ -33,7 +44,7 @@ function listHTML() {
       const top = (work.length ? work : l.item.sets).reduce((a, b) => ((b.kg || 0) > (a.kg || 0) ? b : a));
       right = `<div class="lr-val"><div>${esc(fmtSet(top))}</div><div class="muted small">${esc(relDay(l.session.start))}</div></div>`;
     }
-    return `<button class="list-row" data-a="openEx" data-id="${e.id}"><div class="lr-main"><div class="lr-title">${esc(e.name)}</div><div class="muted small">${muscleLabel(e.muscle)} · ${equipLabel(e.equip)}</div></div>${right}${icon('chevR', 'sm muted')}</button>`;
+    return `<button class="list-row" data-a="openEx" data-id="${e.id}">${exThumb(e.id, S.settings.gymId, 'sm')}<div class="lr-main"><div class="lr-title">${esc(e.name)}</div><div class="muted small">${muscleLabel(e.muscle)} · ${equipLabel(e.equip)}</div></div>${right}${icon('chevR', 'sm muted')}</button>`;
   }).join('');
 }
 
@@ -137,6 +148,7 @@ registerView('ex', (id) => {
   const body = d.tab === 'chart' ? chartHTML(id) : d.tab === 'records' ? recordsHTML(id) : d.tab === 'settings' ? settingsHTML(id) : historyHTML(id);
   return `${navBar({ title: ex.name, right: `<button class="icon-btn" data-a="exdMenu" data-id="${id}" aria-label="${t('more')}">${icon('more')}</button>` })}
     <div class="exd-sub muted">${muscleLabel(ex.muscle)} · ${equipLabel(ex.equip)} · ${icon('timer', 'xs')} ${fmtRest(restFor(id))}</div>
+    ${visualCard(ex)}
     <div class="chips-scroll">${[['all', t('allGyms')], ...S.gyms.map((g) => [g.id, g.name])].map(([gid, name]) => `<button class="fchip ${d.gym === gid ? 'on' : ''}" data-a="exdGym" data-g="${gid}">${gid !== 'all' ? `<i class="gym-dot" style="background:${gymColor(gid)}"></i>` : ''}${esc(name)}</button>`).join('')}</div>
     <div class="seg">${tabs.map(([k, l]) => `<button class="${d.tab === k ? 'on' : ''}" data-a="exdTab" data-t="${k}">${l}</button>`).join('')}</div>
     ${body}`;

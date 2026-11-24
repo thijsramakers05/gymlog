@@ -7,6 +7,7 @@ import { exById, exName, gymById, gymName, setLabel, SET_TYPES, restFor } from '
 import { navBar, notFound, pickGym, openPicker, pickRest } from './shared.js';
 import { actionSheet, confirmDialog, promptText, toast } from '../ui.js';
 import { beginWorkout } from './home.js';
+import { exThumb } from '../visual.js';
 
 const tplOf = (el) => S.templates.find((x) => x.id === el.dataset.tpl || x.id === el.dataset.id);
 const itemOf = (tpl, el) => tpl.items.find((x) => x.id === el.dataset.item);
@@ -25,7 +26,7 @@ function itemHTML(tpl, it, ss) {
   const alts = Object.entries(it.alts || {}).filter(([g, e]) => e && gymById(g));
   return `<div class="card tpl-item ${it.supersetId ? 'ss' : ''}">
     ${it.supersetId ? `<div class="ss-label">${icon('link', 'xs')} Superset ${ss[it.supersetId]}</div>` : ''}
-    <div class="ti-head"><button class="ex-name" data-a="tiSwap" ${d}>${esc(exName(it.exerciseId))}</button>
+    <div class="ti-head"><button class="thumb-btn" data-a="exVisual" data-id="${it.exerciseId}" data-gym="${tpl.gymId || S.settings.gymId || ''}">${exThumb(it.exerciseId, tpl.gymId || S.settings.gymId)}</button><button class="ex-name" data-a="tiSwap" ${d}>${esc(exName(it.exerciseId))}</button>
       <button class="icon-btn" data-a="tiMenu" ${d} aria-label="${t('more')}">${icon('more')}</button></div>
     ${!tpl.gymId && alts.length ? `<div class="alt-lines">${alts.map(([g, e]) => `<div class="alt-line">${icon('swap', 'xs')}<span>${esc(gymName(g))}: <b>${esc(exName(e))}</b></span><button class="link small" data-a="tiAltDel" ${d} data-gym="${g}">${t('remove')}</button></div>`).join('')}</div>` : ''}
     <div class="ti-sets">

@@ -3,7 +3,8 @@ import { S, persist } from '../store.js';
 import { A, IN, render } from '../core.js';
 import { t, SUGGEST } from '../i18n.js';
 import { esc, icon, uid, fmtNum, parseNum, fmtRest, normName } from '../util.js';
-import { exById, exName, gymName, getMeta, setMeta, invalidateEx, lastByExercise } from '../logic.js';
+import { exById, exName, gymName, getMeta, setMeta, invalidateEx, lastByExercise, musclesOf, SEC_DEFAULT } from '../logic.js';
+import { exThumb } from '../visual.js';
 import { MUSCLES, EQUIP } from '../library.js';
 import { openSheet, closeSheet, sheetEl, actionSheet, promptText, toast } from '../ui.js';
 
@@ -71,7 +72,7 @@ function renderPicker() {
   list.sort((a, b) => a.name.localeCompare(b.name));
   const row = (e) => {
     const sel = pk.sel.includes(e.id);
-    return `<button class="pk-row ${sel ? 'sel' : ''}" data-a="pkPick" data-id="${e.id}"><div class="pk-txt"><div class="pk-name">${esc(e.name)}</div><div class="pk-sub">${muscleLabel(e.muscle)} · ${equipLabel(e.equip)}${last.has(e.id) ? ` · <span class="accent-text">${t('used')}</span>` : ''}</div></div>${sel ? `<span class="pk-check">${icon('check')}</span>` : ''}</button>`;
+    return `<button class="pk-row ${sel ? 'sel' : ''}" data-a="pkPick" data-id="${e.id}">${exThumb(e.id, S.settings.gymId, 'sm')}<div class="pk-txt"><div class="pk-name">${esc(e.name)}</div><div class="pk-sub">${muscleLabel(e.muscle)} · ${equipLabel(e.equip)}${last.has(e.id) ? ` · <span class="accent-text">${t('used')}</span>` : ''}</div></div>${sel ? `<span class="pk-check">${icon('check')}</span>` : ''}</button>`;
   };
   let html = '';
   if (!q && !pk.muscle) {
@@ -107,24 +108,40 @@ A.pkNew = () => openExerciseForm({
 // ---------- Oefening maken / bewerken ----------
 let exf = null;
 export function openExerciseForm({ ex, name = '', onSave }) {
-  exf = { ex, muscle: ex ? ex.muscle : null, equip: ex ? ex.equip : null, onSave };
+  exf = { ex, muscle: ex ? ex.muscle : null, equip: ex ? ex.equip : null, sec: ex ? [...musclesOf(ex).sec] : [], secTouched: false, onSave };
   openSheet(`<h3 class="sheet-title">${ex ? t('editExercise') : t('newExercise')}</h3>
     <label class="field"><span>${t('name')}</span><input id="exf-name" value="${esc(ex ? ex.name : name)}" placeholder="${t('exNamePh')}" autocomplete="off"></label>
     <div class="field"><span>${t('muscle')}</span><div class="chip-wrap" data-group="muscle">${MUSCLES.map((m) => `<button class="fchip ${exf.muscle === m ? 'on' : ''}" data-a="exfPick" data-k="muscle" data-v="${m}">${muscleLabel(m)}</button>`).join('')}</div></div>
+    <div class="field"><span>${t('secMuscles')}</span><div class="chip-wrap exf-sec">${secChips()}</div></div>
     <div class="field"><span>${t('equipment')}</span><div class="chip-wrap" data-group="equip">${EQUIP.map((m) => `<button class="fchip ${exf.equip === m ? 'on' : ''}" data-a="exfPick" data-k="equip" data-v="${m}">${equipLabel(m)}</button>`).join('')}</div></div>
     <button class="btn primary btn-block" data-a="exfSave">${t('save')}</button>`, { cls: 'form-sheet', onClose: () => { exf = null; } });
   if (!ex) sheetEl().querySelector('#exf-name').focus();
 }
+function secChips() {
+  return MUSCLES.filter((m) => m !== 'other' && m !== exf.muscle).map((m) => `<button class="fchip ${exf.sec.includes(m) ? 'on' : ''}" data-a="exfSec" data-v="${m}">${muscleLabel(m)}</button>`).join('');
+}
 A.exfPick = (el) => {
   exf[el.dataset.k] = el.dataset.v;
   el.parentElement.querySelectorAll('.fchip').forEach((b) => b.classList.toggle('on', b === el));
+  if (el.dataset.k === 'muscle') {
+    if (!exf.secTouched && !exf.ex) exf.sec = [...(SEC_DEFAULT[exf.muscle] || [])];
+    exf.sec = exf.sec.filter((m) => m !== exf.muscle);
+    sheetEl().querySelector('.exf-sec').innerHTML = secChips();
+  }
+};
+A.exfSec = (el) => {
+  const m = el.dataset.v;
+  exf.secTouched = true;
+  exf.sec = exf.sec.includes(m) ? exf.sec.filter((x) => x !== m) : [...exf.sec, m];
+  el.classList.toggle('on', exf.sec.includes(m));
 };
 A.exfSave = () => {
   const name = sheetEl().querySelector('#exf-name').value.trim();
   if (!name) { toast(t('nameRequired')); return; }
   let ex = exf.ex;
-  if (ex) Object.assign(ex, { name, muscle: exf.muscle || 'other', equip: exf.equip || 'other' });
-  else { ex = { id: uid(), name, muscle: exf.muscle || 'other', equip: exf.equip || 'other', custom: true }; S.exercises.push(ex); }
+  const fields = { name, muscle: exf.muscle || 'other', equip: exf.equip || 'other', sec: exf.sec.filter((m) => m !== (exf.muscle || 'other')) };
+  if (ex) Object.assign(ex, fields);
+  else { ex = { id: uid(), ...fields, custom: true }; S.exercises.push(ex); }
   invalidateEx();
   persist('exercises');
   const cb = exf.onSave;

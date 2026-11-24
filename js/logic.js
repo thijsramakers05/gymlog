@@ -228,6 +228,49 @@ const EQ = [
   [/machine|press|curl|extension|pulldown|row|raise|fly|crunch/, 'machine'],
 ];
 
+// ---------- Meewerkende spieren (voor de spierkaart) ----------
+export const SEC_DEFAULT = {
+  chest: ['shoulders', 'triceps'],
+  back: ['biceps', 'shoulders'],
+  shoulders: ['triceps', 'traps'],
+  biceps: ['forearms'],
+  triceps: [],
+  forearms: [],
+  abs: [],
+  quads: ['glutes', 'adductors'],
+  hamstrings: ['glutes', 'lowerback'],
+  glutes: ['hamstrings'],
+  calves: [],
+  adductors: [],
+  abductors: ['glutes'],
+  traps: ['shoulders'],
+  lowerback: ['glutes', 'hamstrings'],
+  other: [],
+};
+const SEC_RULES = [
+  [/lateral|side raise|lying raise|standing raise/, ['traps']],
+  [/rear delt|reverse fly|reverse pec|face pull/, ['traps', 'back']],
+  [/\bfly\b|pec dec|pec deck|butterfly|crossover/, ['shoulders']],
+  [/leg ext/, []],
+  [/leg curl|hamstring curl|nordic/, ['calves']],
+  [/hammer|reverse curl/, ['forearms']],
+  [/deadlift|rack pull/, ['hamstrings', 'glutes', 'traps', 'forearms']],
+  [/pullover|straight arm/, ['triceps']],
+  [/shrug/, ['forearms']],
+  [/calf|crunch|plank|leg raise/, []],
+];
+export function guessSec(ex) {
+  if (!ex) return [];
+  const low = ' ' + String(ex.name).toLowerCase() + ' ';
+  const rule = SEC_RULES.find(([re]) => re.test(low));
+  const list = rule ? rule[1] : SEC_DEFAULT[ex.muscle] || [];
+  return list.filter((m) => m !== ex.muscle);
+}
+export function musclesOf(ex) {
+  if (!ex) return { primary: 'other', sec: [] };
+  return { primary: ex.muscle || 'other', sec: Array.isArray(ex.sec) ? ex.sec : guessSec(ex) };
+}
+
 export function guessMuscle(name) {
   const n = normName(name);
   const k = sortKey(name);

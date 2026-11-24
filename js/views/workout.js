@@ -9,6 +9,7 @@ import {
 } from '../logic.js';
 import { actionSheet, choose, confirmDialog, promptText, toast } from '../ui.js';
 import { openPicker, openMetaEditor, pickGym, pickRest, metaChips } from './shared.js';
+import { exThumb } from '../visual.js';
 
 const W = () => S.active;
 
@@ -104,6 +105,7 @@ function cardHTML(it, ss) {
   return `<section class="ex-card ${it.supersetId ? 'ss' : ''}" id="card-${it.id}">
     ${it.supersetId ? `<div class="ss-label">${icon('link', 'xs')} Superset ${ss[it.supersetId]}</div>` : ''}
     <div class="ex-head">
+      <button class="thumb-btn" data-a="exVisual" data-id="${it.exerciseId}" data-gym="${w.gymId || ''}" aria-label="${t('photoAndMuscles')}">${exThumb(it.exerciseId, w.gymId)}</button>
       <button class="ex-name" data-a="exInfo" data-id="${it.exerciseId}">${esc(exName(it.exerciseId))}</button>
       <button class="chip ghost rest-chip" data-a="restStart" data-item="${it.id}">${icon('timer', 'xs')} ${fmtRest(restFor(it.exerciseId))}</button>
       <button class="icon-btn" data-a="exMenu" data-item="${it.id}" aria-label="${t('more')}">${icon('more')}</button>

@@ -314,6 +314,20 @@ const D = {
   xlsOld: ['Oude .xls-bestanden worden niet ondersteund. Sla op als .xlsx of plak de cellen.', 'Old .xls files are not supported. Save as .xlsx or paste the cells.'],
   xlsxUnsupported: ['Je iOS-versie kan .xlsx niet uitpakken. Plak de cellen in plaats daarvan.', 'Your iOS version can’t unpack .xlsx. Paste the cells instead.'],
 
+  // Spierkaart & foto's
+  photoAndMuscles: ['Foto en spieren', 'Photo and muscles'],
+  viewFront: ['Voor', 'Front'],
+  viewBack: ['Achter', 'Back'],
+  secMuscles: ['Meewerkende spieren', 'Secondary muscles'],
+  addPhoto: ['Foto toevoegen', 'Add photo'],
+  changePhoto: ['Andere foto', 'Change photo'],
+  deletePhoto: ['Foto weg', 'Remove photo'],
+  deletePhotoQ: ['Foto verwijderen?', 'Remove photo?'],
+  photoHint: ['Foto van het apparaat in {gym}. Je ziet hem bij deze oefening als je in deze gym traint. Hij staat alleen op je iPhone en gaat mee in je back-up.', 'Photo of the machine at {gym}. It shows on this exercise when you train at this gym. It stays on your iPhone and is included in backups.'],
+  photoSaved: ['Foto opgeslagen', 'Photo saved'],
+  photoFailed: ['Foto kon niet worden opgeslagen', 'Photo could not be saved'],
+  historyRecords: ['Historie en records', 'History and records'],
+
   // Spiergroepen
   m_chest: ['Borst', 'Chest'],
   m_back: ['Rug', 'Back'],
