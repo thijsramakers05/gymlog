@@ -41,7 +41,19 @@ function bindEvents() {
 }
 
 async function init() {
+  // Als de database niet binnen 3 s opent (bijv. een oud Gymlog-venster houdt hem vast), uitleg tonen i.p.v. een leeg scherm.
+  const slow = setTimeout(() => {
+    const app = document.getElementById('app');
+    if (app && !app.innerHTML) {
+      app.innerHTML = `<div style="padding:calc(env(safe-area-inset-top) + 60px) 28px;font-family:-apple-system,sans-serif;line-height:1.45">
+        <h2 style="margin:0 0 10px">Gymlog wordt bijgewerkt…</h2>
+        <p>Er staat nog een ander venster of tabblad met Gymlog open. Sluit dat (of sluit de app helemaal af) en open Gymlog opnieuw.</p>
+        <p style="opacity:.6;font-size:14px">Another Gymlog window is still open. Close it (or fully close the app) and open Gymlog again.</p></div>`;
+    }
+  }, 3000);
   await openStore();
+  clearTimeout(slow);
+  if (document.getElementById('app').innerHTML.includes('Gymlog wordt bijgewerkt')) document.getElementById('app').innerHTML = '';
   if (!S.settings.seeded) {
     if (!S.gyms.length) {
       S.gyms = [

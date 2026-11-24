@@ -9,7 +9,7 @@ import { columnChart, lineChart } from '../charts.js';
 import { statTiles } from './history.js';
 import { actionSheet, confirmDialog, promptText, toast, openSheet } from '../ui.js';
 
-export const VERSION = '1.1.1';
+export const VERSION = '1.1.2';
 
 let wkMetric = 'sets';
 let mWeek = weekStart(Date.now());
