@@ -39,26 +39,40 @@ export function sortSessions() {
 // Sleutels van opgeslagen foto's ("oefening|gym"); de foto's zelf worden pas geladen als ze nodig zijn.
 export const photoKeys = new Set();
 
-export async function openStore() {
-  db = await new Promise((res, rej) => {
-    const r = indexedDB.open('gymlog', 2);
-    r.onupgradeneeded = () => {
+let pdb = null; // aparte database voor foto's, zodat de hoofddatabase nooit een versie-upgrade nodig heeft
+
+// Openen zonder versienummer: een bestaande database opent altijd direct (er is niets om op te wachten);
+// alleen een gloednieuwe database krijgt versie 1 met de benodigde opslag.
+function openDb(name, stores) {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(name);
+    r.onupgradeneeded = () => stores(r.result);
+    r.onsuccess = () => {
       const d = r.result;
-      if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv');
-      if (!d.objectStoreNames.contains('sessions')) d.createObjectStore('sessions', { keyPath: 'id' });
-      if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos');
+      d.onversionchange = () => d.close();
+      res(d);
     };
-    r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   });
-  const tx = db.transaction(['kv', 'sessions', 'photos']);
+}
+
+export async function openStore() {
+  [db, pdb] = await Promise.all([
+    openDb('gymlog', (d) => {
+      d.createObjectStore('kv');
+      d.createObjectStore('sessions', { keyPath: 'id' });
+    }),
+    openDb('gymlog-photos', (d) => d.createObjectStore('photos')),
+  ]);
+  const tx = db.transaction(['kv', 'sessions']);
   const kv = tx.objectStore('kv');
   const reqs = KV.map((k) => kv.get(k));
   const sreq = tx.objectStore('sessions').getAll();
-  const preq = tx.objectStore('photos').getAllKeys();
+  const preq = pdb.transaction('photos').objectStore('photos').getAllKeys();
   const [vals, sessions, pkeys] = await Promise.all([Promise.all(reqs.map(wrap)), wrap(sreq), wrap(preq)]);
   photoKeys.clear();
   (pkeys || []).forEach((k) => photoKeys.add(k));
+  await migrateOldPhotos();
   KV.forEach((k, i) => { if (vals[i] !== undefined && vals[i] !== null) S[k] = vals[i]; });
   S.settings = { ...DEFAULT_SETTINGS, ...(S.settings || {}) };
   S.sessions = sessions || [];
@@ -102,19 +116,33 @@ export function flushActive() {
 
 // ---------- Foto's ----------
 export function getPhoto(key) {
-  return wrap(db.transaction('photos').objectStore('photos').get(key));
+  return wrap(pdb.transaction('photos').objectStore('photos').get(key));
 }
 export function putPhoto(key, blob) {
   photoKeys.add(key);
-  const tx = db.transaction('photos', 'readwrite');
+  const tx = pdb.transaction('photos', 'readwrite');
   tx.objectStore('photos').put(blob, key);
   return txDone(tx);
 }
 export function deletePhoto(key) {
   photoKeys.delete(key);
-  const tx = db.transaction('photos', 'readwrite');
+  const tx = pdb.transaction('photos', 'readwrite');
   tx.objectStore('photos').delete(key);
   return txDone(tx);
+}
+
+// Versie 1.1.0 bewaarde foto's in de hoofddatabase; die eenmalig overzetten.
+async function migrateOldPhotos() {
+  if (!db.objectStoreNames.contains('photos')) return;
+  const st = db.transaction('photos').objectStore('photos');
+  const [keys, blobs] = await Promise.all([wrap(st.getAllKeys()), wrap(st.getAll())]);
+  if (!keys.length) return;
+  const tx = pdb.transaction('photos', 'readwrite');
+  keys.forEach((k, i) => { if (!photoKeys.has(k)) { tx.objectStore('photos').put(blobs[i], k); photoKeys.add(k); } });
+  await txDone(tx);
+  const clr = db.transaction('photos', 'readwrite');
+  clr.objectStore('photos').clear();
+  await txDone(clr);
 }
 const blobToDataUrl = (b) => new Promise((res, rej) => {
   const r = new FileReader();
@@ -141,15 +169,17 @@ export async function replaceAll(data) {
   for (const [key, url] of Object.entries(data.photos || {})) {
     try { photos.push([key, await (await fetch(url)).blob()]); } catch (e) { /* kapotte foto overslaan */ }
   }
-  const tx = db.transaction(['kv', 'sessions', 'photos'], 'readwrite');
-  const kv = tx.objectStore('kv');
-  const ss = tx.objectStore('sessions');
-  const ps = tx.objectStore('photos');
-  kv.clear();
-  ss.clear();
+  const ptx = pdb.transaction('photos', 'readwrite');
+  const ps = ptx.objectStore('photos');
   ps.clear();
   photoKeys.clear();
   photos.forEach(([key, blob]) => { ps.put(blob, key); photoKeys.add(key); });
+  await txDone(ptx);
+  const tx = db.transaction(['kv', 'sessions'], 'readwrite');
+  const kv = tx.objectStore('kv');
+  const ss = tx.objectStore('sessions');
+  kv.clear();
+  ss.clear();
   const empty = { meta: {}, settings: {}, active: null };
   for (const k of KV) {
     S[k] = data[k] !== undefined && data[k] !== null ? data[k] : (k in empty ? empty[k] : []);

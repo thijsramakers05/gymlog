@@ -1,5 +1,5 @@
 // Offline-cache. Verhoog VERSION bij elke update zodat iPhones de nieuwe bestanden ophalen.
-const VERSION = 'gymlog-v1.1.0';
+const VERSION = 'gymlog-v1.1.1';
 const ASSETS = [
   './',
   'index.html',
@@ -31,7 +31,8 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // cache: 'reload' = altijd vers van de server, niet uit de HTTP-cache van de browser
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
