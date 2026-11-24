@@ -6,6 +6,8 @@ Web-app voor de sportschool. Hij draait op je iPhone vanaf het beginscherm en we
 - Een workout starten en loggen, met de vorige keer direct ingevuld
 - "Vorige keer" per gym, met één tik te wisselen naar alle gyms
 - Apparaatstanden per oefening per gym (bijv. Stoel 12 · Rugsteun 6), plus het gewicht van het extra "+" op het apparaat
+- Spierkaart per oefening: een doorzichtig silhouet (voor- en achterkant) waarop de getrainde spieren oranje oplichten en de meewerkende spieren lichter
+- Eigen foto van het apparaat per oefening per gym (camera of fotobibliotheek), te zien als rond plaatje in de workout
 - Oefeningen wisselen, toevoegen en verplaatsen tijdens een workout. Na afloop vraagt de app of het schema bijgewerkt moet worden.
 - Schema's importeren uit Excel (.xlsx) of uit geplakte tekst/cellen
 - Historie, grafiek (geschatte 1RM, zwaarste gewicht, volume), records, kalender met streak, sets per spiergroep en lichaamsgewicht
