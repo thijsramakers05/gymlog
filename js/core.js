@@ -54,7 +54,7 @@ export function initRouter() {
 // Optionele melding bovenaan de hoofdschermen (bijv. verhuisd naar een nieuwe link)
 let notice = null;
 export function setNotice(fn) { notice = fn; }
-const NOTICE_ROUTES = ['home', 'history', 'exercises', 'profile'];
+const NOTICE_ROUTES = ['home', 'history', 'friends', 'exercises', 'profile'];
 
 export function render(opts = {}) {
   const v = views[route.name] || views.home;
@@ -69,14 +69,24 @@ export function render(opts = {}) {
   lastKey = location.hash;
 }
 
+// Rood bolletje op een tab (bijv. nieuwe vriendschapsverzoeken)
+const badges = {};
+export function setBadge(tab, n) {
+  if ((badges[tab] || 0) === n) return;
+  badges[tab] = n;
+  const b = document.querySelector(`.tab[data-r="${tab}"] .tab-badge`);
+  if (b) { b.textContent = n; b.hidden = !n; }
+}
+
 function tabbar(active) {
   const tabs = [
     ['home', 'dumbbell', 'tabTraining'],
     ['history', 'calendar', 'tabHistory'],
+    ['friends', 'users', 'tabFriends'],
     ['exercises', 'list', 'tabExercises'],
     ['profile', 'user', 'tabProfile'],
   ];
-  return `<nav class="tabbar">${tabs.map(([r, ic, k]) => `<button class="tab ${active === r ? 'on' : ''}" data-a="tab" data-r="${r}">${icon(ic)}<span>${t(k)}</span></button>`).join('')}</nav>`;
+  return `<nav class="tabbar">${tabs.map(([r, ic, k]) => `<button class="tab ${active === r ? 'on' : ''}" data-a="tab" data-r="${r}"><span class="tab-ic">${icon(ic)}<span class="tab-badge" ${badges[r] ? '' : 'hidden'}>${badges[r] || ''}</span></span><span>${t(k)}</span></button>`).join('')}</nav>`;
 }
 
 function activeBar() {

@@ -114,6 +114,16 @@ async function api(path, opts = {}) {
   }
 }
 
+// ---------- Bouwstenen voor andere modules (vrienden) ----------
+export const myId = () => (auth ? auth.user.id : null);
+export const rest = (path, opts) => api(path, opts);
+export const rpc = (name, args = {}) => api('/rest/v1/rpc/' + name, { method: 'POST', body: args });
+export async function storageBlob(path) {
+  const res = await api('/storage/v1/object/authenticated/photos/' + path, { raw: true });
+  return res.blob();
+}
+export const photoPathFor = (userId, key) => `${userId}/${key.replace(/\|/g, '__')}.jpg`;
+
 // ---------- Inloggen ----------
 export async function signUp(email, password) {
   const j = await call('/auth/v1/signup?redirect_to=' + encodeURIComponent(appUrl()), { method: 'POST', body: { email, password } });
@@ -308,7 +318,8 @@ async function applyIncoming(r, preferRemote, touched) {
 }
 
 async function fetchPage(cursor) {
-  const q = '/rest/v1/records?select=kind,id,data,deleted,server_ts&order=server_ts.asc&limit=500'
+  // Altijd expliciet alleen je eigen records ophalen (nooit die van vrienden)
+  const q = '/rest/v1/records?select=kind,id,data,deleted,server_ts&user_id=eq.' + auth.user.id + '&order=server_ts.asc&limit=500'
     + (cursor ? '&server_ts=gt.' + encodeURIComponent(cursor) : '');
   return (await api(q)) || [];
 }
@@ -489,6 +500,8 @@ async function initialSync() {
 let running = null;
 let again = false;
 let timer = null;
+const syncedListeners = new Set();
+export const onSynced = (fn) => syncedListeners.add(fn);
 
 export function scheduleSync(ms = 2500) {
   if (!auth) return;
@@ -513,6 +526,7 @@ export function syncNow() {
       await saveSt();
       setStatus('ok');
       if (applied) refreshUi();
+      syncedListeners.forEach((f) => { try { f(); } catch (e) { /* negeren */ } });
     } catch (e) {
       console.warn('sync', e);
       if (!auth) setStatus('expired');

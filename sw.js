@@ -1,5 +1,5 @@
 // Offline-cache. Verhoog VERSION bij elke update zodat iPhones de nieuwe bestanden ophalen.
-const VERSION = 'gymlog-v1.3.0';
+const VERSION = 'gymlog-v1.4.0';
 const ASSETS = [
   './',
   'index.html',
@@ -18,6 +18,8 @@ const ASSETS = [
   'js/visual.js',
   'js/cloud.js',
   'js/move.js',
+  'js/friends.js',
+  'js/views/friends.js',
   'js/views/account.js',
   'js/views/shared.js',
   'js/views/home.js',

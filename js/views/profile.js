@@ -10,7 +10,7 @@ import { statTiles } from './history.js';
 import { actionSheet, confirmDialog, promptText, toast, openSheet } from '../ui.js';
 import * as cloud from '../cloud.js';
 
-export const VERSION = '1.3.0';
+export const VERSION = '1.4.0';
 
 let wkMetric = 'sets';
 let mWeek = weekStart(Date.now());

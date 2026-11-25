@@ -152,6 +152,14 @@ export function exThumb(exId, gymId, cls = '') {
   return `<span class="thumb ${cls}">${mmSvg(mus, view, box)}</span>`;
 }
 
+// Miniatuur voor een willekeurig oefening-object (bijv. van een vriend); fotoUrl optioneel
+export function thumbForEx(ex, cls = '', photoAttr = '') {
+  if (photoAttr) return `<span class="thumb photo ${cls}"><img ${photoAttr} alt=""></span>`;
+  const mus = musclesOf(ex || { muscle: 'other' });
+  const [view, box] = THUMB[mus.primary] || THUMB.other;
+  return `<span class="thumb ${cls}">${mmSvg(mus, view, box)}</span>`;
+}
+
 async function resizeImage(file, max = 1200) {
   const url = URL.createObjectURL(file);
   try {

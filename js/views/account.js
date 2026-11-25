@@ -1,10 +1,35 @@
 // Account: inloggen, account maken, wachtwoord vergeten, uitloggen, account verwijderen.
-import { A, registerView, render, go } from '../core.js';
+import { A, registerView, render, go, route } from '../core.js';
 import { t } from '../i18n.js';
 import { esc, icon } from '../util.js';
 import { navBar } from './shared.js';
 import * as cloud from '../cloud.js';
-import { confirmDialog, toast } from '../ui.js';
+import * as fr from '../friends.js';
+import { confirmDialog, promptText, toast } from '../ui.js';
+
+A.shareToggle = async (el) => {
+  const k = el.dataset.k;
+  const share = { ...fr.DEFAULT_SHARE, ...(fr.F.profile.share || {}) };
+  share[k] = !share[k];
+  el.querySelector('.switch').classList.toggle('on', share[k]);
+  try { await fr.updateProfile({ share }); } catch (e) { toast(cloud.errorText(e)); }
+  render();
+};
+A.unChange = async () => {
+  const v = await promptText({ title: t('changeUsername'), text: t('usernameHint'), value: fr.F.profile.username });
+  if (v == null) return;
+  const name = v.trim().replace(/^@/, '').toLowerCase();
+  if (name === fr.F.profile.username) return;
+  if (!/^[a-z0-9_.]{3,20}$/.test(name)) { toast(t('usernameInvalid')); return; }
+  try { await fr.updateProfile({ username: name }); toast(t('usernameSaved', { name }), 'check'); } catch (e) { toast(e.code === 'username_taken' ? t('usernameTaken') : cloud.errorText(e)); }
+  render();
+};
+A.dnChange = async () => {
+  const v = await promptText({ title: t('changeDisplayName'), value: fr.F.profile.display_name || '', placeholder: t('displayNamePh') });
+  if (v == null) return;
+  try { await fr.updateProfile({ display_name: v.trim().slice(0, 40) || null }); } catch (e) { toast(cloud.errorText(e)); }
+  render();
+};
 
 let mode = 'login';
 let msg = null; // { ok, text }
@@ -26,6 +51,37 @@ function formHTML() {
     <p class="hint">${t('accPrivacy')}</p>`;
 }
 
+const SHARE_LABELS = {
+  sessions: ['shareSessions', 'shareSessionsSub'],
+  templates: ['shareTemplates', null],
+  meta: ['shareMeta', 'shareMetaSub'],
+  photos: ['sharePhotos', null],
+  bodyweight: ['shareBodyweight', null],
+};
+
+function friendsSettingsHTML() {
+  const F = fr.F;
+  const head = `<h2 class="list-h">${t('friendsSettings')}</h2>`;
+  if (F.profile === undefined) {
+    if (!F.loading && !F.error) fr.loadAll().then(() => { if (route.name === 'account') render(); });
+    return `${head}<p class="muted small pad-s">${F.error ? esc(t('friendsOffline')) : t('loading')}</p>`;
+  }
+  if (!F.profile) {
+    return `${head}<div class="list-card"><button class="list-row" data-a="go" data-to="friends">${icon('user')}<span class="lr-main">${t('chooseUsername')}<small>${t('setUsernameFirst')}</small></span>${icon('chevR', 'sm muted')}</button></div>`;
+  }
+  const share = { ...fr.DEFAULT_SHARE, ...(F.profile.share || {}) };
+  return `${head}<div class="list-card">
+      <button class="list-row" data-a="unChange">${icon('user')}<span class="lr-main">@${esc(F.profile.username)}<small>${t('changeUsername')}</small></span>${icon('chevR', 'sm muted')}</button>
+      <button class="list-row" data-a="dnChange">${icon('note')}<span class="lr-main">${esc(F.profile.display_name || t('noDisplayName'))}<small>${t('changeDisplayName')}</small></span>${icon('chevR', 'sm muted')}</button>
+    </div>
+    <h2 class="list-h">${t('privacyTitle')}</h2>
+    <div class="list-card">${fr.SHARE_KEYS.map((k) => {
+      const [lbl, sub] = SHARE_LABELS[k];
+      return `<button class="list-row" data-a="shareToggle" data-k="${k}"><span class="lr-main">${t(lbl)}${sub ? `<small>${t(sub)}</small>` : ''}</span><span class="switch ${share[k] ? 'on' : ''}"></span></button>`;
+    }).join('')}</div>
+    <p class="hint">${t('privacyHint')}</p>`;
+}
+
 function accountHTML() {
   return `${navBar({ title: t('account') })}
     <div class="card acc-card">
@@ -35,6 +91,8 @@ function accountHTML() {
       <button class="btn secondary btn-block" data-a="accSync">${icon('refresh', 'sm')} ${t('syncNow')}</button>
     </div>
     <p class="hint">${t('accSyncInfo')}</p>
+    ${friendsSettingsHTML()}
+    <h2 class="list-h">${t('account')}</h2>
     <div class="list-card">
       <button class="list-row" data-a="accLogout">${icon('logout')}<span class="lr-main">${t('logout')}<small>${t('logoutSub')}</small></span></button>
       <button class="list-row danger" data-a="accDelete">${icon('trash')}<span class="lr-main">${t('deleteAccount')}<small>${t('deleteAccountSub')}</small></span></button>

@@ -7,6 +7,7 @@ import { initCloud, captureAuthLink } from './cloud.js';
 import { initMoveNotice } from './move.js';
 import './views/home.js';
 import './views/account.js';
+import './views/friends.js';
 import './views/template.js';
 import { tick } from './views/workout.js';
 import './views/history.js';
