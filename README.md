@@ -14,7 +14,15 @@ Web-app voor de sportschool. Hij draait op je iPhone vanaf het beginscherm en we
 - Rusttimer (handmatig starten), supersets, NL/EN, licht/donker volgt de iPhone
 - Back-up maken en terugzetten (JSON-bestand)
 
-Alle gegevens staan **alleen op je iPhone** (in de app op je beginscherm). Maak af en toe een back-up via Profiel → Back-up maken.
+- Optioneel account (e-mail + wachtwoord): synchroniseert workouts, historie, standen en foto's tussen je apparaten via Supabase (EU)
+
+Zonder account staan alle gegevens **alleen op je iPhone** (in de app op je beginscherm); maak dan af en toe een back-up via Profiel → Back-up maken. Met een account (Profiel → Account) wordt alles daarnaast op de achtergrond gesynchroniseerd. In de gym werkt de app ook zonder bereik.
+
+## Accounts (Supabase)
+
+- De database-opzet staat in [`supabase/setup.sql`](supabase/setup.sql): één tabel `records` met beveiliging per gebruiker (RLS), een privé-bucket `photos` en een functie om je eigen account te verwijderen.
+- In de app staat alleen de publieke *publishable key*; die is bedoeld om openbaar te zijn. De geheime sleutel staat nergens in de code.
+- In Supabase moet onder **Authentication → URL Configuration** de Site URL `https://<gebruikersnaam>.github.io/gymlog/` zijn, zodat links in bevestigings- en wachtwoordmails naar de app gaan.
 
 ## Online zetten met GitHub Pages (eenmalig, ±5 minuten)
 

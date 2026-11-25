@@ -8,8 +8,9 @@ import { navBar, muscleLabel, pickRest } from './shared.js';
 import { columnChart, lineChart } from '../charts.js';
 import { statTiles } from './history.js';
 import { actionSheet, confirmDialog, promptText, toast, openSheet } from '../ui.js';
+import * as cloud from '../cloud.js';
 
-export const VERSION = '1.1.2';
+export const VERSION = '1.2.0';
 
 let wkMetric = 'sets';
 let mWeek = weekStart(Date.now());
@@ -49,6 +50,10 @@ registerView('profile', () => {
       ${ms.length ? `<div class="hbars">${ms.map((m) => `<div class="hb-row"><span class="hb-label">${muscleLabel(m.muscle)}</span><div class="hb-track"><div class="hb-fill" style="width:${(m.sets / max) * 100}%"></div></div><span class="hb-val">${m.sets}</span></div>`).join('')}</div><p class="hint">${t('muscleHint')}</p>` : `<p class="muted small">${t('noSetsWeek')}</p>`}
     </div>
     ${bodyweightCard()}
+    <h2 class="list-h">${t('account')}</h2>
+    <div class="list-card">
+      <button class="list-row" data-a="go" data-to="account">${icon('cloud')}<span class="lr-main">${cloud.loggedIn() ? esc(cloud.userEmail()) : t('accountLogin')}<small data-sync-status>${esc(cloud.loggedIn() ? cloud.statusText() : t('accountLoginSub'))}</small></span>${icon('chevR', 'sm muted')}</button>
+    </div>
     <h2 class="list-h">${t('settings')}</h2>
     <div class="list-card">
       <button class="list-row" data-a="go" data-to="gyms">${icon('pin')}<span class="lr-main">${t('gyms')}</span><span class="muted">${S.gyms.length}</span>${icon('chevR', 'sm muted')}</button>
@@ -126,7 +131,8 @@ CH.backupImport = async (el) => {
   try { data = JSON.parse(await f.text()); } catch (e) { toast(t('backupInvalid')); return; }
   if (!data || data.app !== 'gymlog') { toast(t('backupInvalid')); return; }
   const n = (data.sessions || []).length;
-  const ok = await confirmDialog({ title: t('restoreQ'), text: t('restoreText', { n, date: data.exportedAt ? fmtDate(data.exportedAt, true) : '?' }), ok: t('restore'), danger: true });
+  const text = t('restoreText', { n, date: data.exportedAt ? fmtDate(data.exportedAt, true) : '?' }) + (cloud.loggedIn() ? '\n\n' + t('restoreAccountNote') : '');
+  const ok = await confirmDialog({ title: t('restoreQ'), text, ok: t('restore'), danger: true });
   if (!ok) return;
   await replaceAll(data);
   invalidateEx();
@@ -136,10 +142,13 @@ CH.backupImport = async (el) => {
 };
 
 A.wipeAll = async () => {
-  const ok = await confirmDialog({ title: t('wipeQ'), text: t('wipeText'), ok: t('wipeAll'), danger: true });
+  const text = t('wipeText') + (cloud.loggedIn() ? '\n\n' + t('wipeAccountNote') : '');
+  const ok = await confirmDialog({ title: t('wipeQ'), text, ok: t('wipeAll'), danger: true });
   if (!ok) return;
   const ok2 = await confirmDialog({ title: t('wipeQ2'), text: t('wipeText2'), ok: t('wipeAll'), danger: true });
   if (!ok2) return;
+  // Eerst loskoppelen van het account, zodat het wissen niet naar de server wordt gesynchroniseerd
+  await cloud.forgetAccountLocally();
   await replaceAll({ settings: { lang: S.settings.lang } });
   invalidateEx();
   location.reload();

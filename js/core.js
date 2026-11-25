@@ -33,7 +33,12 @@ export function back(fallback = 'home') {
   else go(fallback, true);
 }
 
+// Haakje dat vóór elke routewissel kan ingrijpen (bijv. inloglinks uit e-mails)
+let preRoute = null;
+export function setPreRoute(fn) { preRoute = fn; }
+
 function onRoute() {
+  if (preRoute) preRoute();
   if (lastKey != null) scrollMem[lastKey] = window.scrollY;
   route = parseHash();
   const key = location.hash;

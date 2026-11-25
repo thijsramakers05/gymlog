@@ -502,6 +502,24 @@ body.resting .wo-screen { padding-bottom: calc(var(--safe-b) + 110px); }
 body.has-active .sticky-foot { bottom: calc(var(--tab-h) + var(--safe-b) + 66px); }
 .sticky-foot .btn { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
 
+/* ---------- Account ---------- */
+.acc-intro { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: var(--text-2); line-height: 1.45; }
+.acc-intro > .ic { color: var(--accent); width: 28px; height: 28px; flex: none; margin-top: 2px; }
+.acc-form .field { margin: 10px 0; }
+.acc-forgot { display: block; margin: 6px auto 2px; }
+.acc-card { text-align: center; padding: 20px 16px; }
+.acc-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-text); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+.acc-email { font-weight: 700; font-size: 17px; word-break: break-all; }
+.acc-card [data-sync-status] { margin: 4px 0 12px; }
+.ok-box, .error-box { display: flex; gap: 8px; align-items: flex-start; border-radius: 12px; padding: 10px 12px; font-size: 14px; line-height: 1.4; margin: 8px 0; }
+.ok-box { background: var(--accent-soft); color: var(--text); }
+.ok-box .ic { color: var(--accent); flex: none; }
+.error-box { background: var(--warn-bg); color: var(--text); }
+.error-box .ic { color: var(--danger); flex: none; }
+.link-card { text-align: center; padding: 28px 18px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.link-card .ic.lg { color: var(--accent); }
+.link-card .btn { margin-top: 10px; }
+
 /* ---------- Spierkaart & foto's ---------- */
 .thumb { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: inline-flex; align-items: center; justify-content: center; overflow: hidden; flex: none; border: 1px solid var(--line); }
 .thumb.sm { width: 40px; height: 40px; }

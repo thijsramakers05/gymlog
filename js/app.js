@@ -1,9 +1,11 @@
 import { S, openStore, persist } from './store.js';
-import { A, IN, CH, initRouter } from './core.js';
+import { A, IN, CH, initRouter, setPreRoute } from './core.js';
 import { ensureLibrary } from './logic.js';
 import { uid } from './util.js';
 import { injectSprite } from './visual.js';
+import { initCloud, captureAuthLink } from './cloud.js';
 import './views/home.js';
+import './views/account.js';
 import './views/template.js';
 import { tick } from './views/workout.js';
 import './views/history.js';
@@ -28,6 +30,8 @@ function bindEvents() {
     const el = e.target.closest && e.target.closest('[data-ch]');
     if (el && CH[el.dataset.ch]) CH[el.dataset.ch](el, e);
   });
+  // Formulieren nooit echt versturen (Enter in een veld klikt op de knop, die de actie uitvoert)
+  document.addEventListener('submit', (e) => e.preventDefault());
   // Toetsenbord-hoogte bijhouden zodat sheets erboven blijven
   if (window.visualViewport) {
     const vv = window.visualViewport;
@@ -41,6 +45,7 @@ function bindEvents() {
 }
 
 async function init() {
+  captureAuthLink(); // link uit een e-mail (bevestigen / wachtwoord vergeten)
   // Als de database niet binnen 3 s opent (bijv. een oud Gymlog-venster houdt hem vast), uitleg tonen i.p.v. een leeg scherm.
   const slow = setTimeout(() => {
     const app = document.getElementById('app');
@@ -67,9 +72,11 @@ async function init() {
   }
   if (!S.settings.gymId && S.gyms.length) S.settings.gymId = S.gyms[0].id;
   ensureLibrary();
+  await initCloud();
   document.documentElement.lang = S.settings.lang;
   injectSprite();
   bindEvents();
+  setPreRoute(captureAuthLink);
   initRouter();
   setInterval(tick, 1000);
   const local = ['localhost', '127.0.0.1', ''].includes(location.hostname);

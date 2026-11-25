@@ -130,7 +130,7 @@ export function ensurePhoto(key) {
   }).catch(() => loading.delete(key));
 }
 
-function forgetPhoto(key) {
+export function forgetPhoto(key) {
   const u = urlCache.get(key);
   if (u) URL.revokeObjectURL(u);
   urlCache.delete(key);
