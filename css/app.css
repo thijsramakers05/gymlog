@@ -1,4 +1,4 @@
-/* Gymlog — licht/donker volgt de iPhone, accent oranje */
+/* Gymbie — licht/donker volgt de iPhone, accent oranje */
 :root {
   color-scheme: light;
   --bg: #f2f2f7;
@@ -501,6 +501,14 @@ body.resting .wo-screen { padding-bottom: calc(var(--safe-b) + 110px); }
 .sticky-foot { position: sticky; bottom: calc(var(--tab-h) + var(--safe-b) + 8px); display: flex; gap: 10px; padding: 10px 0; }
 body.has-active .sticky-foot { bottom: calc(var(--tab-h) + var(--safe-b) + 66px); }
 .sticky-foot .btn { box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18); }
+
+/* ---------- Verhuismelding ---------- */
+.move-banner { display: flex; gap: 10px; align-items: flex-start; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--radius); padding: 12px; margin: 6px 0 4px; font-size: 14px; line-height: 1.4; }
+.move-banner > .ic { color: var(--accent-text); flex: none; margin-top: 1px; }
+.move-banner b { display: block; font-size: 15px; margin-bottom: 2px; }
+.move-banner p { color: var(--text-2); }
+.mb-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.mb-btns a.btn { text-decoration: none; }
 
 /* ---------- Account ---------- */
 .acc-intro { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: var(--text-2); line-height: 1.45; }

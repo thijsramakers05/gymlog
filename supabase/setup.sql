@@ -1,4 +1,4 @@
--- Gymlog: database-opzet voor accounts en synchronisatie.
+-- Gymbie: database-opzet voor accounts en synchronisatie.
 -- Eenmalig uitvoeren in Supabase → SQL Editor. Opnieuw uitvoeren kan geen kwaad.
 
 -- 1. Eén tabel met alle gegevens (workouts, historie, oefeningen, standen, ...),

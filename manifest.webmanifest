@@ -1,6 +1,6 @@
 {
-  "name": "Gymlog",
-  "short_name": "Gymlog",
+  "name": "Gymbie",
+  "short_name": "Gymbie",
   "description": "Workouts loggen, per gym de vorige keer en apparaatstanden zien.",
   "lang": "nl",
   "start_url": "./",

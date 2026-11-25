@@ -51,12 +51,18 @@ export function initRouter() {
   render({ y: 0 });
 }
 
+// Optionele melding bovenaan de hoofdschermen (bijv. verhuisd naar een nieuwe link)
+let notice = null;
+export function setNotice(fn) { notice = fn; }
+const NOTICE_ROUTES = ['home', 'history', 'exercises', 'profile'];
+
 export function render(opts = {}) {
   const v = views[route.name] || views.home;
   const y = opts.y != null ? opts.y : window.scrollY;
   const html = v.fn(...route.params);
   const app = document.getElementById('app');
-  app.innerHTML = `<main class="screen ${v.cls || ''}">${html}</main>${v.noTabs ? '' : activeBar() + tabbar(v.tab)}`;
+  const top = notice && NOTICE_ROUTES.includes(route.name) ? notice() : '';
+  app.innerHTML = `<main class="screen ${v.cls || ''}">${top}${html}</main>${v.noTabs ? '' : activeBar() + tabbar(v.tab)}`;
   document.body.classList.toggle('has-active', !!S.active && !v.noTabs);
   window.scrollTo(0, y);
   if (v.after) v.after(...route.params);

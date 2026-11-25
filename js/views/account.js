@@ -123,7 +123,7 @@ registerView('auth-link', () => {
   const L = cloud.pendingLink;
   if (L !== seenLink) { seenLink = L; linkMsg = null; }
   const head = navBar({ title: t('account'), back: false });
-  const home = `<button class="btn primary btn-block" data-a="linkHome">${t('toGymlog')}</button>`;
+  const home = `<button class="btn primary btn-block" data-a="linkHome">${t('toGymbie')}</button>`;
   if (!L) return `${head}<div class="card center pad">${home}</div>`;
   if (L.error || !L.token) {
     return `${head}<div class="card link-card">${icon('warn', 'lg')}<h3>${t('linkInvalid')}</h3><p class="muted">${esc(L.error || '')}</p>${home}</div>`;

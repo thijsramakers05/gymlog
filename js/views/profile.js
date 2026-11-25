@@ -10,7 +10,7 @@ import { statTiles } from './history.js';
 import { actionSheet, confirmDialog, promptText, toast, openSheet } from '../ui.js';
 import * as cloud from '../cloud.js';
 
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';
 
 let wkMetric = 'sets';
 let mWeek = weekStart(Date.now());
@@ -74,7 +74,7 @@ registerView('profile', () => {
       <button class="list-row" data-a="installHelp">${icon('info')}<span class="lr-main">${t('installHelp')}</span>${icon('chevR', 'sm muted')}</button>
       <button class="list-row danger" data-a="wipeAll">${icon('trash')}<span class="lr-main">${t('wipeAll')}</span></button>
     </div>
-    <p class="muted center small pad">Gymlog ${VERSION}</p>`;
+    <p class="muted center small pad">Gymbie ${VERSION}</p>`;
 }, { tab: 'profile' });
 
 A.wkMetric = (el) => { wkMetric = el.dataset.m; render(); };
@@ -104,7 +104,7 @@ A.setStep = async () => {
 
 A.backupExport = async () => {
   const data = JSON.stringify(await exportData());
-  const name = `gymlog-backup-${todayStr()}.json`;
+  const name = `gymbie-backup-${todayStr()}.json`;
   const mark = () => { S.settings.lastBackup = Date.now(); persist('settings'); render(); };
   let file = null;
   try { file = new File([data], name, { type: 'application/json' }); } catch (e) { file = null; }
